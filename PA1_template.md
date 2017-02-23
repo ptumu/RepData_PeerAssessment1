@@ -5,14 +5,15 @@
 
 
 ```r
-#download the zipfile
-download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity.zip")
+#download, unzip and read file the zipfile
+if(!file.exists("activity.zip")){
+        download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity.zip")
+        unzip("activity.zip")
+}
 
-#unzip the file
-unzip("activity.zip")
-
-# read the data from unzipped csv file
+#read file
 activity <- read.csv("activity.csv")
+
 # convert date column to data format
 activity$date <- as.Date(as.character(activity[["date"]]), "%Y-%m-%d")
 ```
@@ -43,15 +44,11 @@ library(dplyr)
 
 ```r
 #get total steps in each day
-totalStepsPerDay <- activity %>% group_by(date) %>% summarize(total.steps = sum(steps))
+totalStepsPerDay <- activity %>% group_by(date) %>% summarize(total.steps = sum(steps, na.rm = TRUE))
 
 #plot histogram of total steps per day
 g <- ggplot(totalStepsPerDay, aes(total.steps))
 g + geom_histogram(binwidth = 2000) + labs(title = "Total Steps per Day") + labs(x = "Steps", y = "Count")
-```
-
-```
-## Warning: Removed 8 rows containing non-finite values (stat_bin).
 ```
 
 ![](PA1_template_files/figure-html/mean_daily_steps-1.png)<!-- -->
@@ -62,7 +59,7 @@ mean(totalStepsPerDay$total.steps, na.rm = TRUE)
 ```
 
 ```
-## [1] 10766.19
+## [1] 9354.23
 ```
 
 ```r
@@ -70,7 +67,7 @@ median(totalStepsPerDay$total.steps, na.rm = TRUE)
 ```
 
 ```
-## [1] 10765
+## [1] 10395
 ```
 
 ## What is the average daily activity pattern?
@@ -125,8 +122,17 @@ activity$steps.imputed <- apply(activity, 1, function(x) {
         
 })
 
+# calculate total number of missing values in the dataset after imputing 
+sum(is.na(activity$steps.imputed))
+```
+
+```
+## [1] 0
+```
+
+```r
 #get total (imputed) steps in each day 
-totalStepsPerDayImputed <- activity %>% group_by(date) %>% summarize(total.steps.imputed = sum(steps.imputed))
+totalStepsPerDayImputed <- activity %>% group_by(date) %>% summarize(total.steps.imputed = sum(steps.imputed, na.rm = TRUE))
 
 #plot histogram of total steps per day
 g <- ggplot(totalStepsPerDayImputed, aes(total.steps.imputed))
@@ -158,7 +164,7 @@ mean(totalStepsPerDay$total.steps, na.rm = TRUE)
 ```
 
 ```
-## [1] 10766.19
+## [1] 9354.23
 ```
 
 ```r
@@ -166,7 +172,7 @@ median(totalStepsPerDay$total.steps, na.rm = TRUE)
 ```
 
 ```
-## [1] 10765
+## [1] 10395
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
